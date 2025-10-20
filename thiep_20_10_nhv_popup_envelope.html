@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Thiệp 20/10 • NicehairVietnam</title>
+<style>
+  :root{
+    --bg1:#fff7fb;
+    --bg2:#ffeaf4;
+    --ink:#2f2230;
+    --rose:#c40b6b;
+    --rose2:#ff63a6;
+    --line:#ffd3e7;
+    --card:#ffffffee;
+    --shadow:0 12px 40px rgba(0,0,0,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  /* Vietnamese-friendly stacks; avoid serif mixing to prevent glyph fallback gaps */
+  body{
+    font-family: "Noto Sans","Be Vietnam Pro","Inter","Segoe UI","Tahoma","Helvetica Neue",Arial,ui-sans-serif,system-ui,sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: radial-gradient(1200px 600px at 10% 0%, var(--bg2), #fff),
+                linear-gradient(135deg, var(--bg1), #fff);
+    color:var(--ink);
+    overflow:hidden;
+    letter-spacing: 0;
+    word-spacing: normal;
+    text-rendering: geometricPrecision;
+  }
+
+  #petals{position:fixed; inset:0; z-index:0; pointer-events:none}
+
+  .stage{position:relative; z-index:1; min-height:100%; display:flex; align-items:center; justify-content:center; padding:18px}
+  .card{
+    width:min(1040px, 96vw);
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius:22px;
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    position:relative;
+    isolation:isolate;
+    transform: translateY(0);
+  }
+
+  .bouquet{position:absolute; width:180px; opacity:.95; filter: drop-shadow(0 8px 16px rgba(196,11,107,.18));}
+  .b-tl{left:-6px; top:-6px; transform: rotate(-12deg)}
+  .b-tr{right:-6px; top:-6px; transform: scaleX(-1) rotate(-10deg)}
+  .b-bl{left:-6px; bottom:-6px; transform: rotate(8deg)}
+  .b-br{right:-6px; bottom:-6px; transform: scaleX(-1) rotate(10deg)}
+
+  .head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px;
+    background: linear-gradient(90deg,#ffe1ef,#fff,#ffeaf4);
+    border-bottom:2px dashed var(--line);
+    position:relative; z-index:1;
+  }
+  .brand{font-weight:900; color:var(--rose); letter-spacing:.2px}
+  .date{font-weight:800; color:#b30059; background:#fff; padding:6px 12px; border-radius:999px; border:2px solid var(--line)}
+
+  .body{display:grid; grid-template-columns: 1fr; gap:16px; padding:16px; position:relative; z-index:1}
+  @media (min-width:860px){ .body{ grid-template-columns: 1.1fr .9fr; } }
+
+  .title{
+    font-family: "Be Vietnam Pro","Noto Sans","Inter","Segoe UI",Arial,sans-serif;
+    font-weight: 900;
+    font-size: clamp(26px, 5.2vw, 48px);
+    line-height:1.15;
+    color: var(--rose);
+    margin: 6px 0 2px;
+    letter-spacing:.2px;
+  }
+  .subtitle{
+    font-family: "Be Vietnam Pro","Noto Sans","Inter","Segoe UI",Arial,sans-serif;
+    font-size: clamp(15px, 1.45vw, 18px);
+    color:#6b4b64;
+    margin-bottom: 8px;
+    text-align:left; letter-spacing:0; word-spacing:normal;
+  }
+
+  .bubble{
+    background:#fff; border:2px solid var(--line); border-radius:16px; padding:12px;
+    max-height:50vh; overflow:auto; scrollbar-width:thin; box-shadow: var(--shadow);
+  }
+  .row{display:flex; gap:10px; align-items:center; margin:8px 0; flex-wrap:wrap}
+  .tag-btn{
+    background:#fff0f6; border:1.6px solid #ffcee4; color:#b30059; padding:7px 12px; border-radius:999px; font-weight:800; font-size:13px;
+    cursor:pointer; user-select:none;
+  }
+  .hintline{font-size:12px;color:#85657b;margin-top:6px}
+
+  .right{
+    position:relative;
+  }
+  /* Big bouquet center (SVG illustration) */
+  .big-bouquet{width:100%; max-width:520px; margin:0 auto; display:block; filter: drop-shadow(0 14px 34px rgba(196,11,107,.18));}
+
+  .footer{display:flex; flex-wrap:wrap; gap:10px; padding:10px 16px 16px;}
+  .chip{background:#fff; border:2px solid var(--line); color:#b30059; padding:8px 14px; border-radius:999px; font-weight:800; font-size:13px}
+
+  .controls{display:flex; gap:8px; justify-content:flex-end; padding:10px 14px; border-top:2px dashed var(--line); background:#fff}
+  .btn{background:var(--rose); color:#fff; border:0; border-radius:999px; padding:10px 14px; font-weight:800; box-shadow:0 8px 20px rgba(196,11,107,.35); cursor:pointer}
+  .btn.secondary{background:#fff;color:var(--rose);border:2px solid var(--line)}
+
+  .hint{position:fixed; left:12px; bottom:12px; font-size:12px; color:#8c647a; z-index:2}
+  .confetti{position:fixed; width:8px; height:8px; border-radius:2px; pointer-events:none; opacity:.95; z-index:6}
+  @keyframes drop{to{transform:translateY(110vh) rotate(720deg);opacity:.9}}
+
+  /* Popup modal */
+  .modal{
+    position:fixed; inset:0; background:rgba(0,0,0,.35);
+    display:none; align-items:center; justify-content:center; z-index:5;
+  }
+  .modal.open{display:flex}
+  .modal-card{
+    width:min(560px, 92vw);
+    background:#fff; border:2px solid var(--line); border-radius:16px; box-shadow:var(--shadow);
+    padding:16px 18px;
+  }
+  .modal-title{font-weight:900; color:var(--rose); margin-bottom:6px}
+  .modal-msg{color:#4b2f43; line-height:1.6}
+  .modal-actions{margin-top:12px; display:flex; justify-content:flex-end; gap:8px}
+  .modal .btn{padding:8px 12px}
+
+  /* Opening envelope overlay */
+  .envelope-screen{
+    position:fixed; inset:0; background:linear-gradient(135deg,#ffeaf4,#fff);
+    display:flex; align-items:center; justify-content:center; z-index:10;
+    transition: opacity .6s ease;
+  }
+  .envelope-screen.hidden{opacity:0; pointer-events:none}
+  .envelope{
+    position:relative; width:min(420px, 86vw); height:auto;
+    aspect-ratio: 4 / 3;
+    transform: translateY(0);
+  }
+  .env-body{position:absolute; inset:0; background:#fff; border:2px solid var(--line); border-radius:12px; box-shadow:var(--shadow)}
+  .env-flap{
+    position:absolute; left:0; right:0; top:0; height:50%;
+    background:linear-gradient(180deg,#ffd6ea,#ffeaf4);
+    border:2px solid var(--line); border-bottom:none; border-radius:12px 12px 0 0;
+    transform-origin: top center; transform: rotateX(0deg);
+    transition: transform .8s ease;
+  }
+  .env-seal{
+    position:absolute; top:46%; left:50%; transform:translate(-50%,-50%);
+    width:66px; height:66px; background:#ff8ec7; border:3px solid #fff; border-radius:50%;
+    box-shadow:0 6px 16px rgba(196,11,107,.25);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:900;
+  }
+  .open-btn{position:absolute; bottom:-54px; left:50%; transform:translateX(-50%);
+    background:var(--rose); color:#fff; border:0; border-radius:999px; padding:10px 16px; font-weight:800; box-shadow:0 8px 20px rgba(196,11,107,.35);}
+  .envelope.open .env-flap{transform: rotateX(180deg);}
+  .envelope.open .env-seal{opacity:0; transform:translate(-50%,-50%) scale(.8); transition:.4s ease}
+
+</style>
+</head>
+<body>
+<canvas id="petals" aria-hidden="true"></canvas>
+
+<!-- Opening envelope -->
+<div class="envelope-screen" id="envScreen">
+  <div class="envelope" id="envelope">
+    <div class="env-body"></div>
+    <div class="env-flap"></div>
+    <div class="env-seal">NHV</div>
+    <button class="open-btn" id="openCard">Mở phong thư</button>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="card" id="card">
+    <!-- Corner bouquets (simple SVG) -->
+    <svg class="bouquet b-tl" viewBox="0 0 200 200" aria-hidden="true">
+      <g>
+        <circle cx="40" cy="40" r="14" fill="#ff8ec7"/>
+        <circle cx="58" cy="30" r="10" fill="#ffc2e0"/>
+        <circle cx="28" cy="58" r="10" fill="#ffd6ea"/>
+        <path d="M20 90 C60 70, 80 60, 120 40" stroke="#75c39b" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <path d="M35 95 C65 80, 95 70, 130 50" stroke="#96d8b5" stroke-width="6" fill="none" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <svg class="bouquet b-tr" viewBox="0 0 200 200" aria-hidden="true">
+      <g>
+        <circle cx="40" cy="40" r="14" fill="#ff8ec7"/>
+        <circle cx="58" cy="30" r="10" fill="#ffc2e0"/>
+        <circle cx="28" cy="58" r="10" fill="#ffd6ea"/>
+        <path d="M20 90 C60 70, 80 60, 120 40" stroke="#75c39b" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <path d="M35 95 C65 80, 95 70, 130 50" stroke="#96d8b5" stroke-width="6" fill="none" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <svg class="bouquet b-bl" viewBox="0 0 200 200" aria-hidden="true">
+      <g>
+        <circle cx="40" cy="40" r="14" fill="#ff8ec7"/>
+        <circle cx="58" cy="30" r="10" fill="#ffc2e0"/>
+        <circle cx="28" cy="58" r="10" fill="#ffd6ea"/>
+        <path d="M20 90 C60 70, 80 60, 120 40" stroke="#75c39b" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <path d="M35 95 C65 80, 95 70, 130 50" stroke="#96d8b5" stroke-width="6" fill="none" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <svg class="bouquet b-br" viewBox="0 0 200 200" aria-hidden="true">
+      <g>
+        <circle cx="40" cy="40" r="14" fill="#ff8ec7"/>
+        <circle cx="58" cy="30" r="10" fill="#ffc2e0"/>
+        <circle cx="28" cy="58" r="10" fill="#ffd6ea"/>
+        <path d="M20 90 C60 70, 80 60, 120 40" stroke="#75c39b" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <path d="M35 95 C65 80, 95 70, 130 50" stroke="#96d8b5" stroke-width="6" fill="none" stroke-linecap="round"/>
+      </g>
+    </svg>
+
+    <div class="head">
+      <div class="brand">NicehairVietnam</div>
+      <div class="date">20 • 10</div>
+    </div>
+
+    <div class="body">
+      <div>
+        <div class="title">Chúc mừng Ngày Phụ Nữ Việt Nam</div>
+        <div class="subtitle">
+          Nhân ngày 20/10, chúc các chị em luôn thật xinh đẹp, rạng rỡ và bình an.
+          Mong rằng mỗi ngày đều là một hành trình đáng yêu – được làm điều mình thích,
+          sống với niềm đam mê và được bao quanh bởi những người tử tế.
+          Mỗi sợi tóc các chị tạo nên không chỉ là sản phẩm, mà còn là sự tỉ mỉ, kiên nhẫn và tình yêu với cái đẹp.
+        </div>
+
+        <div class="bubble">
+          <div class="row">
+            <button class="tag-btn" data-name="Hồng Hạnh">Hồng Hạnh</button>
+            <button class="tag-btn" data-name="Lan">Lan</button>
+            <button class="tag-btn" data-name="Hạnh Hani">Hạnh Hani</button>
+            <button class="tag-btn" data-name="Trang">Trang</button>
+            <button class="tag-btn" data-name="Quỳnh">Quỳnh</button>
+            <button class="tag-btn" data-name="Mai Anh">Mai Anh</button>
+          </div>
+          <div class="hintline">💡 Bấm vào tên để mở lời chúc riêng.</div>
+        </div>
+
+        <div class="footer">
+          <div class="chip">Mến chúc 20/10 dịu dàng và đáng nhớ 🌷</div>
+          <div class="chip">Một chút tóc đẹp – nhiều niềm vui 🎀</div>
+        </div>
+      </div>
+
+      <div class="right">
+        <!-- Big bouquet SVG -->
+        <svg class="big-bouquet" viewBox="0 0 320 420" aria-hidden="true">
+          <defs>
+            <linearGradient id="petal" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="#ff9bcf"/>
+              <stop offset="1" stop-color="#ffd6ea"/>
+            </linearGradient>
+          </defs>
+          <!-- stems -->
+          <path d="M160 260 C150 320, 150 360, 140 410" stroke="#78c3a1" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M160 260 C170 320, 170 360, 180 410" stroke="#78c3a1" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M160 260 C130 330, 110 360, 110 410" stroke="#78c3a1" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M160 260 C190 330, 210 360, 210 410" stroke="#78c3a1" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <!-- bouquet wrap -->
+          <path d="M100 350 L220 350 L190 410 L130 410 Z" fill="#ffe3ef" stroke="#ffd3e7" stroke-width="3"/>
+          <!-- petals cluster -->
+          <g>
+            <ellipse cx="160" cy="200" rx="64" ry="38" fill="url(#petal)"/>
+            <circle cx="116" cy="188" r="22" fill="#ffc2e0"/>
+            <circle cx="204" cy="186" r="22" fill="#ffc2e0"/>
+            <circle cx="140" cy="170" r="18" fill="#ffd6ea"/>
+            <circle cx="182" cy="168" r="18" fill="#ffd6ea"/>
+            <circle cx="160" cy="150" r="20" fill="#ffb3d9"/>
+            <circle cx="132" cy="212" r="18" fill="#ffb3d9"/>
+            <circle cx="188" cy="212" r="18" fill="#ffb3d9"/>
+          </g>
+          <!-- ribbon -->
+          <path d="M120 350 q40 -16 80 0" stroke="#ff8ec7" stroke-width="10" fill="none" stroke-linecap="round"/>
+          <circle cx="160" cy="350" r="10" fill="#ff8ec7"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn secondary" id="togglePetal">Tắt hoa rơi</button>
+      <button class="btn" id="shoot">Bắn confetti</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-msg" id="modalMsg"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="closeModal">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div class="hint">Mẹo: chạm nền để bắn confetti mini 🌸 • Có thể bật/tắt hoa rơi</div>
+
+<script>
+(function(){
+  // Opening envelope
+  const envScreen = document.getElementById('envScreen');
+  const envelope = document.getElementById('envelope');
+  const openBtn = document.getElementById('openCard');
+  openBtn.addEventListener('click', ()=>{
+    envelope.classList.add('open');
+    setTimeout(()=> envScreen.classList.add('hidden'), 650);
+    setTimeout(()=> envScreen.style.display='none', 1300);
+  });
+
+  // Falling petals
+  const canvas = document.getElementById('petals');
+  const ctx = canvas.getContext && canvas.getContext('2d');
+  if(ctx){
+    let W, H;
+    function resize(){
+      W = innerWidth; H = innerHeight;
+      canvas.width = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      canvas.style.width = W+'px';
+      canvas.style.height = H+'px';
+      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    }
+    resize(); addEventListener('resize', resize);
+
+    const colors = ['#ff8ec7','#ffc2e0','#ffd6ea','#ffb3d9'];
+    const N = Math.min(120, Math.floor(W*H/12000));
+    const rand=(a,b)=>Math.random()*(b-a)+a;
+    const petals=[];
+    for(let i=0;i<N;i++){
+      petals.push({
+        x: rand(0,W), y: rand(-H,0),
+        r: rand(6,14), sp: rand(25,60),
+        drift: rand(-0.6,1.1), rot: rand(0,Math.PI*2), rotSp: rand(-0.02,0.02),
+        color: colors[Math.random()*colors.length|0], sway: rand(0,Math.PI*2)
+      });
+    }
+    function draw(p){
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      const w=p.r*1.2, h=p.r*0.9;
+      const g=ctx.createLinearGradient(0,-h,0,h); g.addColorStop(0,p.color); g.addColorStop(1,'#fff');
+      ctx.fillStyle=g; ctx.beginPath();
+      ctx.moveTo(0,-h);
+      ctx.bezierCurveTo(w,-h*0.2,w,h*0.2,0,h);
+      ctx.bezierCurveTo(-w,h*0.2,-w,-h*0.2,0,-h);
+      ctx.fill(); ctx.restore();
+    }
+    let enabled=true, last=0;
+    function loop(ts){
+      if(!enabled){requestAnimationFrame(loop); return;}
+      const dt=(ts-last)/1000||0.016; last=ts;
+      ctx.clearRect(0,0,W,H);
+      for(const p of petals){
+        p.y+=p.sp*dt; p.x+=Math.sin(p.sway+p.y*0.01)*(1.1+p.drift); p.rot+=p.rotSp;
+        if(p.y>H+20){p.y=-20; p.x=rand(0,W);}
+        draw(p);
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    const btn=document.getElementById('togglePetal');
+    btn.addEventListener('click',()=>{
+      enabled=!enabled; btn.textContent=enabled?'Tắt hoa rơi':'Bật hoa rơi';
+      if(!enabled) ctx.clearRect(0,0,W,H);
+    });
+
+    // Confetti
+    function shoot(x,y){
+      const n=18, palette=colors;
+      for(let i=0;i<n;i++){
+        const el=document.createElement('div'); el.className='confetti';
+        el.style.left=x+'px'; el.style.top=y+'px';
+        el.style.background=palette[Math.random()*palette.length|0];
+        const dx=(Math.random()-0.5)*90; const dur=0.9+Math.random()*0.8;
+        el.style.transform=`translate(${dx}px,0)`; el.style.animation=`drop ${dur}s ease-in forwards`;
+        document.body.appendChild(el); setTimeout(()=>el.remove(), dur*1000);
+      }
+    }
+    document.body.addEventListener('click', (e)=> shoot(e.clientX, e.clientY));
+    document.getElementById('shoot').addEventListener('click', ()=> shoot(innerWidth/2, 0));
+  }
+
+  // Popup wishes
+  const wishes = {
+    "Hồng Hạnh": "Chúc chị Hạnh luôn giữ nụ cười tươi và trái tim nhiệt huyết. Mong chị gặp nhiều niềm vui nhỏ trong công việc, và luôn được yêu quý bởi sự tận tâm và dịu dàng 💖",
+    "Lan": "Chúc chị Lan luôn tinh tế và khéo léo như cách chị chọn từng tone màu, từng sợi tóc. Mong chị luôn hạnh phúc, bình yên và được bao quanh bởi những điều thật đẹp 🌸",
+    "Hạnh Hani": "Gửi đến chị Hani thật nhiều năng lượng tích cực. Mong chị luôn mạnh mẽ, sáng tạo và đủ yêu bản thân để thấy cuộc sống này thật đáng yêu 💕",
+    "Trang": "Chúc chị Trang luôn vui tươi, đầy cảm hứng và kiên định với những điều chị chọn. Mỗi ngày làm việc là một ngày thêm yêu nghề, thêm yêu chính mình 🌼",
+    "Quỳnh": "Chúc chị Quỳnh luôn nhẹ nhàng, duyên dáng và gặp nhiều điều may mắn. Mong chị luôn có những người bên cạnh khiến chị cười thật nhiều và thấy mình được trân trọng 💐",
+    "Mai Anh": "Chúc chị Mai Anh luôn tỏa sáng – không chỉ vì công việc giỏi mà vì tâm hồn thật đẹp. Mong chị mãi tự tin, vui vẻ và hạnh phúc trong mọi hành trình ✨"
+  };
+  const modal = document.getElementById('modal');
+  const mTitle = document.getElementById('modalTitle');
+  const mMsg = document.getElementById('modalMsg');
+  const closeModal = document.getElementById('closeModal');
+  closeModal.addEventListener('click', ()=> modal.classList.remove('open'));
+
+  document.querySelector('.bubble').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tag-btn'); if(!btn) return;
+    const name = btn.dataset.name;
+    mTitle.textContent = "Lời chúc gửi " + name;
+    mMsg.textContent = wishes[name] || "";
+    modal.classList.add('open');
+  });
+})();
+</script>
+</body>
+</html>
